@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Absences</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styleworkers.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
+    <style>
+        td {
+            padding: 10px;
+        }x
+
+        td button:hover {
+            transform: scale(1.05);
+        }
+        #download-pdf {
+        background-color: #4CAF50; /* Couleur de fond (vert) */
+        color: white; /* Couleur du texte */
+        padding: 10px 20px; /* Espacement interne */
+        border: none; /* Pas de bordure */
+        border-radius: 5px; /* Coins arrondis */
+        font-size: 16px; /* Taille de la police */
+        cursor: pointer; /* Curseur pointeur */
+        box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.2); /* Ombre */
+        transition: all 0.3s ease; /* Effet de transition */
+    }
+
+    /* Effet hover */
+    #download-pdf:hover {
+        background-color: #45a049; /* Couleur plus foncée au survol */
+        transform: scale(1.05); /* Légère augmentation de la taille */
+        box-shadow: 0px 6px 8px rgba(0, 0, 0, 0.3); /* Accentuation de l'ombre */
+    }
+
+    /* Effet focus (lorsque l'utilisateur clique ou utilise le clavier) */
+    #download-pdf:focus {
+        outline: 2px solid #2196F3; /* Bordure bleue */
+        outline-offset: 2px; /* Décalage de la bordure */
+    }
+    .btn-signout {
+            background-color: #f44336;
+            color: white;
+            font-size: 14px;
+            padding: 10px 20px;
+            border-radius: 5px;
+            border: none;
+            cursor: pointer;
+            margin-left: 20px;
+            transition: background-color 0.3s ease;
+        }
+
+        .btn-signout:hover {
+            background-color: #e53935;
+        }
+
+    </style>
+</head>
+
+<body>
+    <nav>
+        <ul>
+            <li><a href="workers.html">Workers</a></li>
+            <li><a href="allabsences.html">Absence</a></li>
+            <li><a href="detailssalarylist.html">Details Salary</a></li>
+            <li><a href="allrequestsleave.html">All vacation Request</a></li>
+        </ul>
+         <button class="btn-signout" onclick="signOut()">Sign Out</button>
+    </nav>
+    <div class="background-animation">
+        <div class="circle"></div>
+        <div class="circle"></div>
+        <div class="circle"></div>
+    </div>
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>Detail</th>
+                    <th>Information</th>
+                </tr>
+            </thead>
+            <tbody id="absences-table-body">
+                <tr>
+                    <td><strong>Salary :</strong></td>
+                    <td id="Salary"></td>
+                </tr>
+                <tr>
+                    <td><strong>Daily wage :</strong></td>
+                    <td id="daily-wage"></td>
+                </tr>
+                <tr>
+                    <td><strong>Total Duration Absences :</strong></td>
+                    <td id="total-absences"></td>
+                </tr>
+                <tr>
+                    <td><strong>Deductions :</strong></td>
+                    <td id="deductions"></td>
+                </tr>
+                <tr>
+                    <td><strong>Total Salary :</strong></td>
+                    <td id="totalSalary"></td>
+                </tr>
+            </tbody>
+        </table>
+        <button id="download-pdf">Download PDF</button>
+    </div>
+
+    <script>
+        // Fonction pour récupérer les détails du travailleur
+        document.addEventListener('DOMContentLoaded', checkTokenAndLoaddetails);
+
+function checkTokenAndLoaddetails() {
+    const token = localStorage.getItem('token');
+    if (!token) {
+        window.location.href = 'Unauthorized.html';
+    } else {
+
+    }
+}
+        async function fetchWorkerDetails() {
+            const workerId = getQueryParam('workerId'); // Récupérer l'ID du travailleur depuis l'URL
+            try {
+                const response = await fetch(`http://localhost:3000/admin/getworkerdetails/${workerId}`); // URL de ton API
+                const data = await response.json();
+
+                if (data.workerName) {
+                    // Mettre à jour les éléments HTML avec les données du travailleur
+                    document.getElementById('Salary').innerHTML = `${data.salary.toFixed(2)} TND`;
+                    document.getElementById('daily-wage').innerHTML = `${data.dailyWage.toFixed(2)} TND`;
+                    document.getElementById('total-absences').innerHTML = `${data.totalAbsenceDuration} Days`;
+                    document.getElementById('deductions').innerHTML = `${data.deductions.toFixed(2)} TND`;
+                    document.getElementById('totalSalary').innerHTML = `${data.totalSalary.toFixed(2)} TND`;
+                } else {
+                    console.error("Worker details not found");
+                }
+            } catch (error) {
+                console.error('Error fetching worker details:', error);
+            }
+        }
+
+        // Fonction pour obtenir l'ID du travailleur à partir de l'URL
+        function getQueryParam(param) {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get(param);
+        }
+
+        // Appeler la fonction pour récupérer et afficher les données
+        fetchWorkerDetails();
+
+        // Fonction pour télécharger les informations en PDF
+        document.getElementById('download-pdf').addEventListener('click', function () {
+            const { jsPDF } = window.jspdf; // Récupérer l'objet jsPDF
+
+            // Créer un nouveau document PDF
+            const doc = new jsPDF();
+
+            // Récupérer les informations du salarié à partir des éléments HTML
+            const Salary = document.getElementById('Salary').innerText;
+            const dailyWage = document.getElementById('daily-wage').innerText;
+            const totalAbsences = document.getElementById('total-absences').innerText;
+            const deductions = document.getElementById('deductions').innerText;
+            const totalSalary = document.getElementById('totalSalary').innerText;
+
+            // Définir les données pour le tableau
+            const tableData = [
+                ['Detail', 'Information'],
+                ['Salary', Salary],
+                ['Daily Wage', dailyWage],
+                ['Total Duration Absences', totalAbsences],
+                ['Deductions', deductions],
+                ['Total Salary', totalSalary]
+            ];
+
+            // Ajouter un titre
+            doc.setFontSize(16);
+            doc.text('Salary Details', 20, 20);
+            doc.autoTable({
+                startY: 30,
+                head: [['Detail', 'Information']],
+                body: tableData.slice(1),
+                startY: 30,
+                head: [['Detail', 'Information']],
+                body: tableData.slice(1),
+                styles: {
+                    fontSize: 12,
+                    cellPadding: 10,
+                    halign: 'center',
+                    fillColor: [255, 255, 255],
+                    textColor: [0, 0, 0],
+                    font: 'helvetica',
+                    lineWidth: 0.5,
+                    lineColor: [0, 0, 0],
+                },
+                headStyles: {
+                    fillColor: [255, 255, 250],
+                    textColor: [0, 0, 0],
+                    fontStyle: 'bold',
+                    halign: 'center',
+                },
+                bodyStyles: {
+                    fillColor: [240, 240, 240],
+                    textColor: [0, 0, 0],
+                },
+                alternateRowStyles: {
+                    fillColor: [245, 245, 245],
+                },
+                margin: { top: 20, left: 20, right: 20 },
+            });
+            doc.save('worker-details.pdf');
+        });
+        function signOut() {
+                const confirmLogout = confirm("Are you sure you want to log out?");
+                if (confirmLogout) {
+                    localStorage.removeItem('token'); // Suppression du token dans le localStorage
+                    window.location.href = 'HomePage.html'; // Redirection vers la page d'accueil
+                } else {
+                    console.log("Logout cancelled");
+                }
+            }
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Workers</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styleworkers.css">
+    <style>
+        /* Conteneur des actions */
+        td {
+            padding: 10px;
+        }
+
+        /* Conteneur de la colonne Actions */
+        td:last-child {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        /* Style des boutons */
+        td button {
+            padding: 8px 16px;
+            font-size: 14px;
+            border-radius: 5px;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        /* Style du bouton Edit */
+        .btn-edit {
+            background-color: #4CAF50;
+            color: white;
+        }
+
+        .btn-edit:hover {
+            background-color: #45a049;
+        }
+
+        /* Style du bouton Delete */
+        .btn-delete {
+            background-color: #f44336;
+            color: white;
+        }
+
+        .btn-delete:hover {
+            background-color: #e53935;
+        }
+
+        /* Style pour le bouton de déconnexion */
+        .btn-signout {
+            background-color: #f44336;
+            color: white;
+            font-size: 14px;
+            padding: 10px 20px;
+            border-radius: 5px;
+            border: none;
+            cursor: pointer;
+            margin-left: 20px;
+            transition: background-color 0.3s ease;
+        }
+
+        .btn-signout:hover {
+            background-color: #e53935;
+        }
+    </style>
+</head>
+
+<body>
+    <nav>
+        <ul>
+            <li><a href="workers.html">Workers</a></li>
+            <li><a href="allabsences.html">Absence</a></li>
+            <li><a href="detailssalarylist.html">Details Salary</a></li>
+            <li><a href="allrequestsleave.html">All vacation Request</a></li>
+        </ul>
+        <button class="btn-signout" onclick="signOut()">Sign Out</button>
+    </nav>
+
+    <div class="background-animation">
+        <div class="circle"></div>
+        <div class="circle"></div>
+        <div class="circle"></div>
+    </div>
+
+    <div class="table-container">
+        <button class="btn-add-worker" onclick="addclient()">+ Add Worker</button>
+        <table>
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Position</th>
+                    <th>Joining Date</th>
+                    <th>Email</th>
+                    <th>Phone Number</th>
+                    <th>Salary</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody id="workers-table-body">
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        // Fonction pour rediriger vers la page d'ajout de worker
+        function addclient() {
+            window.location.href = "addWorkers.html";
+        }
+
+        // Vérification du token et chargement des données
+        document.addEventListener('DOMContentLoaded', checkTokenAndLoadWorkers);
+
+        function checkTokenAndLoadWorkers() {
+            const token = localStorage.getItem('token'); // Vérifier le token
+            if (!token) {
+                window.location.href = 'Unauthorized.html'; // Redirige vers la page de connexion si pas de token
+            } else {
+                loadWorkers(token); // Charge les travailleurs si le token est présent
+            }
+        }
+
+        async function loadWorkers(token) {
+            try {
+                // Envoie du token pour authentification
+                const response = await fetch('http://localhost:3000/admin/getallworkers', {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                    },
+                });
+
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    alert(`Error: ${errorText}`);
+                    return;
+                }
+
+                const workers = await response.json();
+                const tableBody = document.getElementById('workers-table-body');
+
+                // Ajoute chaque worker dans le tableau
+                workers.forEach(worker => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${worker.name}</td>
+                        <td>${worker.position}</td>
+                        <td>${worker.Joining_date}</td>
+                        <td>${worker.email}</td>
+                        <td>${worker.phone}</td>
+                        <td>${worker.salary}</td>
+                        <td>
+                            <button class="btn-edit" onclick="updateWorker('${worker._id}')">Edit</button>
+                            <button class="btn-delete" onclick="deleteWorker('${worker._id}')">Delete</button>
+                            <button class="btn-info" onclick="moreinfo('${worker._id}')">+ More</button>
+                        </td>
+                    `;
+                    tableBody.appendChild(row);
+                });
+            } catch (error) {
+                console.error('Erreur lors du chargement des workers:', error);
+            }
+        }
+
+        // Fonction pour rediriger vers la page d'édition
+        function updateWorker(workerId) {
+            window.location.href = `updateworker.html?workerId=${workerId}`;
+        }
+
+        // Fonction pour voir plus d'informations sur un worker
+        function moreinfo(workerId) {
+            window.location.href = `profileworker.html?workerId=${workerId}`;
+        }
+
+        // Fonction pour supprimer un worker
+        async function deleteWorker(workerId) {
+            if (confirm("Are you sure you want to delete this worker?")) {
+                try {
+                    const token = localStorage.getItem('token');
+                    const response = await fetch(`http://localhost:3000/admin/deleteWorker/${workerId}`, {
+                        method: 'DELETE',
+                        headers: {
+                            'Authorization': `Bearer ${token}`,
+                        },
+                    });
+
+                    if (response.ok) {
+                        alert("Worker deleted successfully!");
+                        location.reload(); 
+                        loadWorkers(token); // Recharge la liste des workers après suppression
+                    } else {
+                        const errorData = await response.json();
+                        alert(`Error: ${errorData.error}`);
+                    }
+                } catch (error) {
+                    console.error("Erreur lors de la suppression du worker:", error);
+                    alert("Error during deletion");
+                }
+            }
+        }
+
+        // Fonction pour se déconnecter
+        function signOut() {
+            const confirmLogout = confirm("Are you sure you want to log out?");
+            if (confirmLogout) {
+                localStorage.removeItem('token'); // Suppression du token dans le localStorage
+                localStorage.removeItem('worker'); // Suppression des données du worker
+                window.location.href = 'HomePage.html'; // Redirection vers la page d'accueil
+            } else {
+                console.log("Logout cancelled");
+            }
+        }
+    </script>
+</body>
+
+</html>

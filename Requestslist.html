@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Absences</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styleworkers.css">
+    <style>
+        /* Style pour le bouton de déconnexion */
+        .btn-signout {
+            background-color: #f44336;
+            color: white;
+            font-size: 14px;
+            padding: 10px 20px;
+            border-radius: 5px;
+            border: none;
+            cursor: pointer;
+            margin-left: 20px;
+            transition: background-color 0.3s ease;
+        }
+
+        .btn-signout:hover {
+            background-color: #e53935;
+        }
+
+        /* Style du formulaire de filtrage */
+        .filters {
+            margin-top: 60px;
+            padding: 10px;
+            border-radius: 5px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+            width: 40%;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .filters select {
+            padding: 8px;
+            margin-right: 10px;
+        }
+
+        .filters button {
+            padding: 8px 15px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+
+        .filters button:hover {
+            background-color: #45a049;
+        }
+
+        table {
+            width: 100%;
+            margin-top: 20px;
+            border-collapse: collapse;
+        }
+
+        th,
+        td {
+            padding: 10px;
+            border: 1px solid #ddd;
+            text-align: center;
+        }
+    </style>
+</head>
+
+<body>
+    <nav>
+        <ul>
+            <li><a href="workers.html">Workers</a></li>
+            <li><a href="allabsences.html">Absence</a></li>
+            <li><a href="detailssalarylist.html">Details Salary</a></li>
+            <li><a href="allrequestsleave.html">All vacation Request</a></li>
+        </ul>
+        <button class="btn-signout" onclick="signOut()">Sign Out</button>
+    </nav>
+
+    <div class="background-animation">
+        <div class="circle"></div>
+        <div class="circle"></div>
+        <div class="circle"></div>
+    </div>
+
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+
+                    <th>Vacation date </th>
+                    <th>Duration</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody id="workers-leaves-table-body">
+            </tbody>
+        </table>
+    </div>
+
+
+    <script>
+
+
+        document.addEventListener('DOMContentLoaded', checkTokenAndleaves);
+
+        function checkTokenAndleaves() {
+            const token = localStorage.getItem('token'); // Vérifier le token
+            if (!token) {
+                window.location.href = 'Unauthorized.html'; // Redirige vers la page de connexion si pas de token
+            } else {
+                loadleaves(token); // Charge les travailleurs si le token est présent
+            }
+        }
+        async function loadleaves() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const workerId = urlParams.get('workerId'); // Récupère l'ID du travailleur depuis l'URL
+            if (!workerId) {
+                console.error("Worker ID is missing in the URL.");
+                return;
+            }
+            try {
+                const response = await fetch(`http://localhost:3000/leaves/getAllRequestsforoneworker/${workerId}`);
+                const leaves = await response.json();
+                const tableBody = document.getElementById('workers-leaves-table-body');
+
+                if (leaves.length === 0) {
+                    tableBody.innerHTML = `<tr><td colspan="5">No leaves found for this worker.</td></tr>`;
+                    return;
+                }
+
+                let totalDuration = 0; // Initialiser la somme des durées
+
+                leaves.forEach(leave => {
+                   // Additionner les durées
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                <td>${leave.leavedate}</td>
+                <td>${leave.duration}</td>
+                <td>${leave.status}</td>`;
+                    tableBody.appendChild(row);
+                });
+
+
+
+            } catch (error) {
+                console.error('Error loading absences:', error);
+            }
+        }
+        function signOut() {
+            const confirmLogout = confirm("Are you sure you want to log out?");
+            if (confirmLogout) {
+                localStorage.removeItem('token'); // Suppression du token dans le localStorage
+                window.location.href = 'HomePage.html'; // Redirection vers la page d'accueil
+            } else {
+                console.log("Logout cancelled");
+            }
+        }
+
+    </script>
+
+</body>
+
+</html>

@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Absences</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styleworkers.css">
+    <style>
+        /* Conteneur des actions */
+        td {
+            padding: 10px;
+        }
+
+        /* Optionnel : Ajouter un effet au survol des boutons */
+        td button:hover {
+            transform: scale(1.05);
+            /* Augmente légèrement la taille du bouton */
+        }
+    </style>
+</head>
+
+<body>
+    <nav>
+        <ul>
+            <li><a href="workers.html">Workers</a></li>
+            <li><a href="allabsences.html">Absence</a></li>
+            <li><a href="detailssalarylist.html">Details Salary</a></li>
+            <li><a href="allrequestsleave.html">All vacation Request</a></li>
+        </ul>
+    </nav>
+    <div class="background-animation">
+        <div class="circle"></div>
+        <div class="circle"></div>
+        <div class="circle"></div>
+    </div>
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+
+                    <th>Absence Date</th>
+                    <th>Duration</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody id="absences-table-body">
+            </tbody>
+        </table>
+    </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', loadAbsences);
+
+        async function loadAbsences() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const workerId = urlParams.get('workerId'); // Récupère l'ID du travailleur depuis l'URL
+            if (!workerId) {
+                console.error("Worker ID is missing in the URL.");
+                return;
+            }
+
+            try {
+                const response = await fetch(`http://localhost:3000/absence/getallabsencesforoneworker/${workerId}`);
+                const absences = await response.json();
+                const tableBody = document.getElementById('absences-table-body');
+                const absencesTotal = document.getElementById('absences-total'); // Sélectionne l'élément pour afficher le total
+
+                if (!tableBody) {
+                    console.error('Table body element not found!');
+                    return;
+                }
+
+                if (absences.length === 0) {
+                    tableBody.innerHTML = `<tr><td colspan="3">No absences found for this worker.</td></tr>`;
+                    absencesTotal.textContent = '0 day';
+                    return;
+                }
+                absences.forEach(absence => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                <td>${absence.AbsenceDate}</td>
+                <td>${absence.duration}</td>
+                <td>${absence.reason}</td>
+            `;
+                    tableBody.appendChild(row);
+                });
+            } catch (error) {
+                console.error('Error loading absences:', error);
+            }
+        }
+         
+    </script>
+</body>
+
+</html>

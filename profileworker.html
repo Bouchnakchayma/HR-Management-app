@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Worker Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styleworkers.css">
+    <!-- Ajouter Font Awesome pour les icônes -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        /* Style pour le bouton de déconnexion */
+        .btn-signout {
+            background-color: #f44336;
+            color: white;
+            font-size: 14px;
+            padding: 10px 20px;
+            border-radius: 5px;
+            border: none;
+            cursor: pointer;
+            margin-left: 20px;
+            transition: background-color 0.3s ease;
+        }
+
+        .btn-signout:hover {
+            background-color: #e53935;
+        }
+
+        /* Style général */
+        body {
+            font-family: 'Poppins', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #1e1e2f;
+            color: white;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Poppins', sans-serif;
+            color: #ffffff;
+            background: linear-gradient(135deg, #1a1a1a, #2c2c2c);
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            justify-content: flex-start;
+            height: 100%;
+            overflow: auto;
+        }
+
+        nav {
+            width: 100%;
+            background: linear-gradient(135deg, #1a1a1a, #2c2c2c);
+            padding: 10px 0;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+            display: flex;
+            justify-content: center;
+            z-index: 1;
+            top: 0;
+        }
+
+        nav ul {
+            list-style: none;
+            display: flex;
+            gap: 20px;
+            margin: 0;
+            padding: 0;
+        }
+
+        nav ul li {
+            font-size: 1.1em;
+        }
+
+        nav ul li a {
+            text-decoration: none;
+            color: #ffffff;
+            padding: 8px 20px;
+            border-radius: 5px;
+            transition: background 0.3s ease, transform 0.2s ease;
+        }
+
+        nav ul li a:hover {
+            background: rgba(0, 0, 0, 0.1);
+            transform: scale(1.05);
+        }
+
+        .background-animation {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            overflow: hidden;
+        }
+
+        .dashboard-container {
+            padding: 20px;
+            margin: 80px auto 20px;
+            max-width: 1200px;
+            display: flex;
+            flex-direction: row;
+            gap: 30px;
+        }
+
+        .dashboard {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            /* 3 colonnes */
+            gap: 30px;
+            width: 100%;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* Agrandir horizontalement les blocs sauf le dernier */
+        .card {
+            grid-column: span 1;
+            /* Tous les blocs occuperont une colonne */
+        }
+
+        /* Bloc Informations du Worker plus grand */
+        .card.large {
+            grid-column: span 3;
+            /* Occuper toute la largeur de la grille */
+            height: 400px;
+            /* Augmenter la hauteur */
+        }
+
+        /* Style pour l'icône à côté du titre */
+        .card-header {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .card-header i {
+            font-size: 2rem;
+            /* Taille de l'icône */
+        }
+
+        .card h3 {
+            margin: 10px 0;
+            font-size: 1.15rem;
+        }
+
+        .card p {
+            font-size: 1rem;
+            margin: 5px 0;
+        }
+
+        .btn-add-absence {
+            background-color: #000000;
+            /* Couleur de fond noire */
+            color: #ffffff;
+            /* Écriture blanche */
+            border: none;
+            padding: 10px 20px;
+            /* Taille réduite */
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            /* Réduction de la taille du texte */
+            text-decoration: none;
+            display: inline-block;
+            margin-top: 10px;
+            /* Ajout d'espace avec le bloc */
+            float: right;
+            /* Aligner à droite */
+            width: 140px;
+        }
+
+        .btn-add-absence:hover {
+            background-color: #333333;
+            /* Couleur légèrement plus claire au survol */
+        }
+
+
+        /* Style pour l'image du worker */
+        .worker-image {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            /* Image ronde */
+            object-fit: cover;
+            /* Assure que l'image couvre tout le cercle */
+            margin-right: 30px;
+            /* Ajouter de l'espace à droite de l'image */
+        }
+
+        .info-link {
+            display: inline-flex;
+            align-items: center;
+            color: #e10d0d;
+            text-decoration: none;
+            font-size: 0.9rem;
+            margin-top: 10px;
+            transition: color 0.3s ease;
+        }
+
+        .info-link i {
+            margin-right: 5px;
+            font-size: 1rem;
+        }
+
+        .info-link:hover {
+            color: #4CAF50;
+        }
+    </style>
+</head>
+
+<body>
+    <nav>
+        <ul>
+            <li><a href="workers.html">Workers</a></li>
+            <li><a href="allabsences.html">Absence</a></li>
+            <li><a href="detailssalarylist.html">Details Salary</a></li>
+            <li><a href="allrequestsleave.html">All vacation Request</a></li>
+        </ul>
+    </nav>
+    <div class="background-animation">
+        <div class="circle"></div>
+        <div class="circle"></div>
+        <div class="circle"></div>
+    </div>
+    <div class="dashboard-container">
+        <div class="worker-image-container">
+            <img src="../istockphoto-1300845620-612x612.jpg" alt="Worker" class="worker-image">
+        </div>
+        <div class="dashboard">
+            <!-- Bloc 1: Total d'heures travaillées avec icône à côté du titre -->
+            <div class="card">
+                <div class="card-header">
+                    <i class="fas fa-clock"></i>
+                    <h3>Total Vacations</h3>
+                </div>
+                <p></p>
+                <a href="#" class="request-link2" id="request-info2">
+                    <i class="fas fa-info-circle"></i>
+                </a>
+
+            </div>
+
+            <!-- Bloc 2: Absences avec icône à côté du titre -->
+            <div class="card">
+                <div class="card-header">
+                    <i class="fas fa-calendar-times"></i>
+                    <h3>Absences</h3>
+                </div>
+                <p></p>
+                <a href="#" class="info-link" id="more-absences-info">
+                    <i class="fas fa-info-circle"></i>
+                </a>
+            </div>
+
+            <!-- Bloc 3: Congés Restants avec icône à côté du titre -->
+            <div class="card">
+                <div class="card-header">
+                    <i class="fas fa-sun"></i>
+                    <h3>Remaining Leave</h3>
+                </div>
+                <p>10 Days</p>
+            </div>
+
+            <!-- Bloc Informations Worker -->
+            <div class="card large">
+                <h1>Informations du Worker</h1>
+                <p><strong>Name : </strong><span id="workerName"> </span></p>
+                <p><strong>Position : </strong><span id="workerPosition"> </span></p>
+                <p><strong>Joining date : </strong><span id="workerDate"> </span></p>
+                <p><strong>Email : </strong><span id="workerEmail"> </span></p>
+                <p><strong>Phone : </strong><span id="workerPhone"> </span></p>
+                <p><strong>Salary : </strong><span id="workerSalary"> </span></p>
+                <a href="#" class="info-link" id="salarydetails">
+                    <i class="fas fa-plus"></i> View salary Details
+                </a>
+            </div> <a href="#" class="btn-add-absence" id="add-absence-btn">+ Add Absence</a>
+            <a href="#" class="btn-add-absence" id="add-leave-btn">+ Add Request Leave</a>
+        </div>
+        <script>
+            // Fonction pour récupérer un paramètre depuis l'URL
+            function getQueryParam(param) {
+                const urlParams = new URLSearchParams(window.location.search);
+                return urlParams.get(param);
+            }
+            document.addEventListener('DOMContentLoaded', checkTokenAndLoadAbsences);
+
+            function checkTokenAndLoadAbsences() {
+                const token = localStorage.getItem('token');
+                if (!token) {
+                    window.location.href = 'Unauthorized.html';
+                } else {
+
+                }
+            }
+
+            document.addEventListener('DOMContentLoaded', () => {
+                // Récupérer l'ID du travailleur depuis l'URL
+                const workerId = getQueryParam('workerId');
+
+                const requestLink = document.getElementById('request-info2');
+                if (requestLink && workerId) {
+                    // Mise à jour du lien pour redirection
+                    requestLink.addEventListener('click', (event) => {
+                        event.preventDefault();  // Empêche le comportement par défaut du lien
+                        window.location.href = `Requestslist.html?workerId=${workerId}`;  // Redirection avec l'ID du travailleur
+                    });
+                } else if (!workerId) {
+                    console.warn("No workerId parameter found in URL.");
+                }
+
+
+                if (!workerId) {
+                    console.error("Worker ID not found in the URL.");
+                    return;
+                }
+
+                // Modifier le lien du bouton Ajouter Absence
+                const addAbsenceBtn = document.getElementById('add-absence-btn');
+                if (addAbsenceBtn) {
+                    addAbsenceBtn.href = `addabsences.html?workerId=${workerId}`;
+                }
+
+                // Ajouter l'événement de clic sur l'icône des absences
+                const moreAbsencesInfo = document.getElementById('more-absences-info');
+                if (moreAbsencesInfo) {
+                    moreAbsencesInfo.addEventListener('click', (event) => {
+                        event.preventDefault(); // Empêche le comportement par défaut
+                        window.location.href = `absences.html?workerId=${workerId}`;
+                    });
+                }
+
+                // Gérer l'événement de clic pour le bouton Ajouter Congé
+                const addLeaveBtn = document.getElementById('add-leave-btn');
+                if (addLeaveBtn) {
+                    addLeaveBtn.addEventListener('click', (event) => {
+                        event.preventDefault(); // Empêche le comportement par défaut du lien
+                        window.location.href = `Calendrier.html?workerId=${workerId}`; // Redirection vers calendrier avec l'ID du travailleur
+                    });
+                }
+                const infolink = document.getElementById('salarydetails');
+                if (infolink) {
+                    infolink.addEventListener('click', (event) => {
+                        event.preventDefault(); // Empêche le comportement par défaut du lien
+                        window.location.href = `salairedetails.html?workerId=${workerId}`; // Redirection avec l'ID du travailleur
+                    });
+                }
+                // Récupérer les données du travailleur
+                fetch(`http://localhost:3000/admin/getWorkerbyid/${workerId}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.message) {
+                            console.error(data.message);
+                        } else {
+                            document.getElementById('workerName').textContent = data.name || 'Nom non disponible';
+                            document.getElementById('workerPosition').textContent = data.position || 'Poste non défini';
+                            document.getElementById('workerDate').textContent = data.Joining_date || 'Date non disponible';
+                            document.getElementById('workerEmail').textContent = data.email || 'Email non disponible';
+                            document.getElementById('workerPhone').textContent = data.phone || 'Téléphone non disponible';
+                            document.getElementById('workerSalary').textContent = data.salary || 'Salaire non disponible';
+                            const workerImageElement = document.querySelector('.worker-image');
+                            if (workerImageElement && data.workerImage) {
+                                workerImageElement.src = data.workerImage; // Met à jour le src de l'image avec l'URL récupérée
+                            }
+                        }
+                    })
+                    .catch((error) => {
+                        console.error('Erreur lors de la récupération des données du travailleur:', error);
+                    });
+
+                // Récupérer les absences du travailleur
+                fetch(`http://localhost:3000/absence/getallabsencesforoneworker/${workerId}`)
+                    .then(response => response.json())
+                    .then(absences => {
+                        if (Array.isArray(absences)) {
+                            let totalAbsencesDuration = 0;
+                            absences.forEach(absence => {
+                                totalAbsencesDuration += absence.duration;
+                            });
+                            // Mettre à jour le bloc Absences avec la durée totale
+                            const absencesBlock = document.querySelectorAll('.card')[1]; // Le deuxième bloc "Absences"
+                            const absencesElement = absencesBlock.querySelector('p');
+                            absencesElement.textContent = `${totalAbsencesDuration} jours`;
+                        } else {
+                            console.error("Les absences ne sont pas sous forme de tableau.");
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Erreur lors de la récupération des absences:', error);
+                    });
+
+                fetch(`http://localhost:3000/leaves/getAllRequestsforoneworker/${workerId}`)
+                    .then(response => response.json())
+                    .then(leaves => {
+                        if (Array.isArray(leaves)) {
+                            // Filtrer les demandes de congé acceptées
+                            const acceptedLeaves = leaves.filter(leave => leave.status === 'accepted');
+
+                            let totalAcceptedLeaveDuration = 0;
+                            acceptedLeaves.forEach(leave => {
+                                totalAcceptedLeaveDuration += leave.duration;
+                            });
+
+                            // Mettre à jour le bloc "Total Vacations" avec la durée totale des congés acceptés
+                            const totalVacationsBlock = document.querySelectorAll('.card')[0]; // Le premier bloc "Total Vacations"
+                            const totalVacationsElement = totalVacationsBlock.querySelector('p');
+                            totalVacationsElement.textContent = `${totalAcceptedLeaveDuration} days`;
+
+                            // Mettre à jour le bloc "Remaining Leave"
+                            const maxAnnualLeave = 30; // Nombre total de congés annuel autorisés
+                            const remainingLeave = maxAnnualLeave - totalAcceptedLeaveDuration;
+                            const remainingLeaveBlock = document.querySelectorAll('.card')[2]; // Troisième bloc "Remaining Leave"
+                            const remainingLeaveElement = remainingLeaveBlock.querySelector('p');
+                            remainingLeaveElement.textContent = `${remainingLeave} days`;
+                        } else {
+                            console.error("Les demandes de congé ne sont pas sous forme de tableau.");
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Erreur lors de la récupération des demandes de congé:', error);
+                    });
+
+            });
+         
+
+            // Déconnexion de l'utilisateur
+            function signOut() {
+                const confirmLogout = confirm("Are you sure you want to log out?");
+                if (confirmLogout) {
+                    localStorage.removeItem('token'); // Suppression du token dans le localStorage
+                    window.location.href = 'HomePage.html'; // Redirection vers la page d'accueil
+                } else {
+                    console.log("Logout cancelled");
+                }
+            }
+        </script>
+
+</body>
+
+</html>

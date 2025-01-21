@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Workers</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styleworkers.css">
+    <style>
+        /* Conteneur des actions */
+        td {
+            padding: 10px;
+        }
+
+        /* Conteneur de la colonne Actions */
+        td:last-child {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        /* Style des boutons */
+        td button {
+            padding: 8px 16px;
+            font-size: 14px;
+            border-radius: 5px;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        /* Style du bouton Edit */
+        .btn-edit {
+            background-color: #4CAF50;
+            color: white;
+        }
+
+        .btn-edit:hover {
+            background-color: #45a049;
+        }
+
+        /* Style du bouton Delete */
+        .btn-delete {
+            background-color: #f44336;
+            color: white;
+        }
+
+        .btn-delete:hover {
+            background-color: #e53935;
+        }
+
+        /* Style pour le bouton de déconnexion */
+        .btn-signout {
+            background-color: #f44336;
+            color: white;
+            font-size: 14px;
+            padding: 10px 20px;
+            border-radius: 5px;
+            border: none;
+            cursor: pointer;
+            margin-left: 20px;
+            transition: background-color 0.3s ease;
+        }
+
+        .btn-signout:hover {
+            background-color: #e53935;
+        }
+    </style>
+</head>
+
+<body>
+    <nav>
+        <ul>
+            <li><a href="workers.html">Workers</a></li>
+            <li><a href="allabsences.html">Absence</a></li>
+            <li><a href="detailssalarylist.html">Details Salary</a></li>
+            <li><a href="allrequestsleave.html">All vacation Request</a></li>
+        </ul>
+        <button class="btn-signout" onclick="signOut()">Sign Out</button>
+    </nav>
+
+    <div class="background-animation">
+        <div class="circle"></div>
+        <div class="circle"></div>
+        <div class="circle"></div>
+    </div>
+
+    <div class="table-container">
+     
+        <table>
+            <thead>
+                <tr>
+                    <th>Worker name </th>
+                    <th>Salary</th>
+                    <th>Daily wage </th>
+                    <th>Total Duration Absences</th>
+                    <th>Deductions</th>
+                    <th>Total Salary :</th>
+                </tr>
+            </thead>
+            <tbody id="workers-table-body">
+            </tbody>
+        </table>
+    </div>
+<script>
+  
+    // Fonction pour récupérer et afficher les détails des workers
+    async function fetchWorkersDetails() {
+        try {
+            // Envoyer une requête GET au backend
+            const response = await fetch('http://localhost:3000/admin/getAllWorkerssalaryDetails');
+            const workersDetails = await response.json();
+
+            // Cible l'élément du tableau
+            const tableBody = document.getElementById('workers-table-body');
+
+            // Effacer le contenu existant du tableau
+            tableBody.innerHTML = '';
+
+            // Parcourir chaque worker et ajouter une ligne au tableau
+            workersDetails.forEach(worker => {
+                const row = `
+                    <tr>
+                        <td>${worker.workerName}</td>
+                        <td>${worker.salary}</td>
+                        <td>${worker.dailyWage.toFixed(2)}</td>
+                        <td>${worker.totalAbsenceDuration}</td>
+                        <td>${worker.deductions.toFixed(2)}</td>
+                        <td>${worker.totalSalary.toFixed(2)}</td>
+                    </tr>
+                `;
+                tableBody.innerHTML += row;
+            });
+        } catch (error) {
+            console.error('Error fetching worker details:', error);
+        }
+    }
+
+    // Charger les détails des workers dès que la page est chargée
+    window.onload = fetchWorkersDetails;
+</script>
+ 
+
+</body>
+
+</html>
